@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>青魚棋 · 開放世界</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:#060f1e;overflow:hidden;font-family:'Noto Sans TC',sans-serif;touch-action:none;width:100vw;height:100vh;}
+
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;}
+.screen.hidden{display:none;}
+
+#screen-title{background:linear-gradient(180deg,#040c1c 0%,#081a38 60%,#061428 100%);}
+.title-fish{font-size:clamp(48px,12vw,90px);animation:fishBob 2s ease-in-out infinite;}
+@keyframes fishBob{0%,100%{transform:translateY(0) rotate(-5deg);}50%{transform:translateY(-12px) rotate(5deg);}}
+.title-text{font-size:clamp(28px,8vw,56px);font-weight:900;color:#40e0d0;letter-spacing:6px;text-shadow:0 0 30px rgba(64,224,208,0.5);margin:8px 0 4px;}
+.title-sub{font-size:clamp(11px,3vw,16px);color:rgba(150,210,230,0.6);letter-spacing:3px;margin-bottom:32px;}
+.wave-bar{width:min(340px,85vw);height:3px;background:linear-gradient(90deg,transparent,#40e0d0,transparent);border-radius:2px;margin-bottom:28px;animation:waveSweep 2s ease-in-out infinite;}
+@keyframes waveSweep{0%,100%{opacity:0.4;}50%{opacity:1;}}
+.menu-btn{width:min(280px,75vw);padding:14px 0;margin:6px 0;border-radius:14px;border:none;font-family:'Noto Sans TC',sans-serif;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:2px;transition:transform 0.15s,opacity 0.15s;}
+.menu-btn:active{transform:scale(0.96);}
+.btn-start{background:linear-gradient(135deg,#1a6a6a,#40e0d0);color:#040c1c;}
+.btn-settings{background:rgba(64,224,208,0.1);color:#40e0d0;border:1px solid rgba(64,224,208,0.3);}
+.btn-howto{background:rgba(64,224,208,0.06);color:rgba(150,210,230,0.8);border:1px solid rgba(64,224,208,0.15);}
+
+#screen-howto{background:#060f1e;padding:20px;overflow-y:auto;justify-content:flex-start;padding-top:40px;}
+.howto-inner{width:min(520px,95vw);}
+.howto-title{font-size:22px;font-weight:900;color:#40e0d0;margin-bottom:18px;text-align:center;letter-spacing:3px;}
+.howto-section{background:rgba(64,224,208,0.05);border:1px solid rgba(64,224,208,0.15);border-radius:12px;padding:14px 16px;margin-bottom:12px;}
+.howto-h{font-size:13px;font-weight:700;color:#40e0d0;letter-spacing:1px;margin-bottom:8px;}
+.howto-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;font-size:13px;color:rgba(180,220,235,0.85);line-height:1.5;}
+.howto-icon{font-size:18px;flex-shrink:0;width:24px;text-align:center;}
+.char-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px;}
+.char-card{background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 10px;border:1px solid rgba(255,255,255,0.05);}
+.char-emoji{font-size:20px;}
+.char-name{font-size:11px;font-weight:700;color:#88ccdd;margin:2px 0;}
+.char-desc{font-size:10px;color:rgba(150,200,220,0.6);line-height:1.4;}
+.terrain-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:12px;color:rgba(170,210,225,0.8);}
+.t-dot{width:14px;height:14px;border-radius:4px;flex-shrink:0;}
+
+#screen-settings{background:#060f1e;padding:20px;overflow-y:auto;justify-content:flex-start;padding-top:40px;}
+.settings-inner{width:min(520px,95vw);}
+.settings-title{font-size:22px;font-weight:900;color:#40e0d0;margin-bottom:18px;text-align:center;letter-spacing:3px;}
+.setting-group{background:rgba(64,224,208,0.05);border:1px solid rgba(64,224,208,0.15);border-radius:12px;padding:14px 16px;margin-bottom:12px;}
+.setting-group-title{font-size:12px;font-weight:700;color:#40e0d0;letter-spacing:2px;margin-bottom:12px;}
+.setting-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:13px;color:rgba(180,220,235,0.85);}
+.setting-row:last-child{margin-bottom:0;}
+.setting-label{flex:1;}
+.setting-label small{display:block;font-size:10px;color:rgba(150,200,220,0.5);margin-top:1px;}
+.toggle{width:44px;height:24px;background:rgba(255,255,255,0.1);border-radius:12px;position:relative;cursor:pointer;transition:background 0.2s;flex-shrink:0;}
+.toggle.on{background:#40e0d0;}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left 0.2s;}
+.toggle.on::after{left:23px;}
+.seg-ctrl{display:flex;gap:4px;}
+.seg-btn{padding:4px 10px;border-radius:6px;border:1px solid rgba(64,224,208,0.25);background:transparent;color:rgba(150,200,220,0.6);font-size:11px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;transition:all 0.15s;}
+.seg-btn.active{background:rgba(64,224,208,0.2);border-color:rgba(64,224,208,0.6);color:#40e0d0;font-weight:700;}
+.slider-wrap{display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end;}
+.slider-wrap input[type=range]{width:90px;accent-color:#40e0d0;}
+.slider-val{font-size:11px;color:#40e0d0;min-width:28px;text-align:right;}
+.back-btn{width:min(280px,75vw);padding:12px 0;margin:10px auto 20px;display:block;border-radius:12px;border:1px solid rgba(64,224,208,0.3);background:rgba(64,224,208,0.08);color:#40e0d0;font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:2px;}
+
+#screen-game{background:#060f1e;padding:0;justify-content:flex-start;align-items:flex-start;}
+#game-canvas{display:block;touch-action:none;}
+
+#hud{position:absolute;inset:0;pointer-events:none;z-index:10;}
+#stat-panel{position:absolute;top:8px;left:8px;background:rgba(4,12,30,0.88);border:1px solid rgba(64,224,208,0.3);border-radius:10px;padding:8px 10px;min-width:140px;pointer-events:all;}
+#fish-label{font-size:12px;font-weight:700;color:#40e0d0;margin-bottom:5px;}
+.bar-row{display:flex;align-items:center;gap:5px;margin-bottom:3px;font-size:10px;color:#77aacc;}
+.bar-bg{width:70px;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;flex-shrink:0;}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.3s;}
+.bar-val{font-size:10px;color:rgba(150,200,220,0.7);min-width:22px;}
+#coin-lv{font-size:10px;color:#66aacc;margin-top:4px;}
+
+#minimap-wrap{position:absolute;top:8px;right:8px;pointer-events:all;}
+#minimap{width:80px;height:80px;background:rgba(4,12,30,0.88);border:1px solid rgba(64,224,208,0.25);border-radius:8px;}
+
+#quest-panel{position:absolute;top:96px;right:8px;background:rgba(4,12,30,0.82);border:1px solid rgba(64,224,208,0.18);border-radius:8px;padding:6px 9px;max-width:150px;pointer-events:none;}
+#quest-panel.hide{display:none;}
+.qp-title{font-size:9px;font-weight:700;color:#40e0d0;letter-spacing:1px;margin-bottom:4px;}
+.qi{font-size:10px;color:#88ccdd;line-height:1.5;}
+.qi.done{color:rgba(80,200,120,0.6);text-decoration:line-through;}
+
+#notif-box{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(4,12,35,0.95);border:1px solid rgba(255,220,60,0.5);border-radius:12px;padding:10px 18px;color:#ffdd44;font-size:13px;font-weight:700;text-align:center;pointer-events:none;opacity:0;transition:opacity 0.3s;max-width:80vw;}
+#notif-box.show{opacity:1;}
+
+#dialog-box{position:absolute;bottom:130px;left:8px;right:8px;background:rgba(4,12,35,0.96);border:1px solid rgba(64,224,208,0.4);border-radius:14px;padding:12px 14px;display:none;pointer-events:all;}
+#dlg-name{font-size:12px;font-weight:700;color:#40e0d0;margin-bottom:5px;}
+#dlg-text{font-size:13px;color:#cce8f0;line-height:1.55;margin-bottom:8px;}
+#dlg-opts{display:flex;gap:6px;flex-wrap:wrap;}
+.dopt{background:rgba(64,224,208,0.1);border:1px solid rgba(64,224,208,0.35);border-radius:8px;padding:5px 12px;font-size:12px;color:#40e0d0;cursor:pointer;font-family:'Noto Sans TC',sans-serif;}
+.dopt:active{background:rgba(64,224,208,0.25);}
+
+#skill-flash{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity 0.2s;}
+#skill-flash.show{opacity:1;}
+#sf-emoji{font-size:52px;display:block;animation:sfPop 0.5s ease-out;}
+#sf-name{font-size:18px;font-weight:900;color:#40e0d0;margin-top:4px;text-shadow:0 0 20px rgba(64,224,208,0.7);}
+@keyframes sfPop{0%{transform:scale(0.3);}70%{transform:scale(1.15);}100%{transform:scale(1);}}
+
+#joystick-area{position:absolute;bottom:20px;left:16px;width:130px;height:130px;pointer-events:all;}
+#joystick-base{width:110px;height:110px;border-radius:50%;background:rgba(64,224,208,0.08);border:2px solid rgba(64,224,208,0.25);position:absolute;top:10px;left:10px;}
+#joystick-knob{width:46px;height:46px;border-radius:50%;background:rgba(64,224,208,0.35);border:2px solid rgba(64,224,208,0.7);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+
+#action-btns{position:absolute;bottom:20px;right:14px;display:flex;flex-direction:column;align-items:flex-end;gap:8px;pointer-events:all;}
+.act-btn{width:52px;height:52px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:transform 0.1s;font-family:'Noto Sans TC',sans-serif;}
+.act-btn:active{transform:scale(0.9);}
+.act-interact{background:rgba(64,224,208,0.25);border:2px solid rgba(64,224,208,0.6);}
+.act-skill{background:rgba(255,100,200,0.25);border:2px solid rgba(255,100,200,0.6);}
+.act-map{background:rgba(255,200,60,0.2);border:2px solid rgba(255,200,60,0.4);width:42px;height:42px;font-size:16px;}
+
+#pause-btn{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(4,12,30,0.7);border:1px solid rgba(64,224,208,0.2);border-radius:8px;padding:4px 14px;font-size:11px;color:rgba(150,200,220,0.7);cursor:pointer;pointer-events:all;font-family:'Noto Sans TC',sans-serif;}
+#pause-overlay{position:absolute;inset:0;background:rgba(4,12,30,0.92);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:20;pointer-events:all;}
+#pause-overlay.show{display:flex;}
+.pause-title{font-size:24px;font-weight:900;color:#40e0d0;margin-bottom:24px;letter-spacing:4px;}
+.pause-btn{width:200px;padding:12px 0;margin:5px 0;border-radius:10px;border:1px solid rgba(64,224,208,0.3);background:rgba(64,224,208,0.08);color:#40e0d0;font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:2px;}
+.pause-btn.danger{border-color:rgba(255,80,80,0.3);color:#ff7788;background:rgba(255,80,80,0.06);}
+
+#end-overlay{position:absolute;inset:0;background:rgba(4,12,30,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:30;pointer-events:all;}
+#end-overlay.show{display:flex;}
+#end-emoji{font-size:64px;margin-bottom:8px;}
+#end-title{font-size:28px;font-weight:900;color:#40e0d0;margin-bottom:6px;}
+#end-sub{font-size:14px;color:rgba(150,200,220,0.7);margin-bottom:24px;text-align:center;}
+.end-stat{font-size:13px;color:#88ccdd;margin-bottom:4px;}
+</style>
+</head>
+<body>
+
+<!-- ══ TITLE SCREEN ══ -->
+<div class="screen" id="screen-title">
+  <div class="title-fish">🐟</div>
+  <div class="title-text">青魚棋</div>
+  <div class="title-sub">OPEN WORLD · 青魚海域</div>
+  <div class="wave-bar"></div>
+  <button class="menu-btn btn-start" onclick="startGame()">▶ 開始冒險</button>
+  <button class="menu-btn btn-howto" onclick="showScreen('howto')">📖 前導說明</button>
+  <button class="menu-btn btn-settings" onclick="showScreen('settings')">⚙️ 遊戲設定</button>
+</div>
+
+<!-- ══ HOW TO PLAY ══ -->
+<div class="screen hidden" id="screen-howto">
+  <div class="howto-inner">
+    <div class="howto-title">📖 前導說明</div>
+    <div class="howto-section">
+      <div class="howto-h">🌊 世界觀</div>
+      <div class="howto-row"><span class="howto-icon">🌏</span>在「青魚海域」中，各大青魚部落為了爭奪「魚王核心」展開大戰。你是一條普通青魚，從小海域出發，探索世界、結交盟友、挑戰強敵，最終成為深海霸主！</div>
+    </div>
+    <div class="howto-section">
+      <div class="howto-h">🕹️ 操控方式</div>
+      <div class="howto-row"><span class="howto-icon">🕹️</span>左下角搖桿：拖拉控制角色移動</div>
+      <div class="howto-row"><span class="howto-icon">💬</span>右下 E 按鈕：靠近 NPC 時互動對話</div>
+      <div class="howto-row"><span class="howto-icon">⚡</span>右下技能按鈕：發動必殺技（CD 5秒）</div>
+      <div class="howto-row"><span class="howto-icon">⏸️</span>頂部暫停鍵：暫停/回主選單</div>
+    </div>
+    <div class="howto-section">
+      <div class="howto-h">🐟 角色介紹</div>
+      <div class="char-grid">
+        <div class="char-card"><div class="char-emoji">🎓</div><div class="char-name">校長青魚</div><div class="char-desc">BOSS，挑戰後獲得大量獎勵</div></div>
+        <div class="char-card"><div class="char-emoji">🐡</div><div class="char-name">市場老闆</div><div class="char-desc">購買補給品回復狀態</div></div>
+        <div class="char-card"><div class="char-emoji">🤓</div><div class="char-name">學霸青魚</div><div class="char-desc">傳授地形知識，獲得XP</div></div>
+        <div class="char-card"><div class="char-emoji">😡</div><div class="char-name">狂暴青魚</div><div class="char-desc">低血量暴走，高風險高報酬</div></div>
+        <div class="char-card"><div class="char-emoji">🗑️</div><div class="char-name">垃圾青魚</div><div class="char-desc">僱用他污染地圖阻礙敵人</div></div>
+        <div class="char-card"><div class="char-emoji">💎</div><div class="char-name">深海珍珠</div><div class="char-desc">收集3顆完成主線任務</div></div>
+      </div>
+    </div>
+    <div class="howto-section">
+      <div class="howto-h">🗺️ 地形效果</div>
+      <div class="terrain-row"><div class="t-dot" style="background:#4a1530"></div>珊瑚區 🪸 防禦+5，貨幣掉落率高</div>
+      <div class="terrain-row"><div class="t-dot" style="background:#050d25"></div>深海區 🌊 隱身1回合，氧氣消耗快</div>
+      <div class="terrain-row"><div class="t-dot" style="background:#1a3a1a"></div>水草區 🌿 每秒回血+5，新鮮度維持</div>
+      <div class="terrain-row"><div class="t-dot" style="background:#1e0850"></div>漩渦區 🌀 強制位移，方向隨機</div>
+      <div class="terrain-row"><div class="t-dot" style="background:#2a1600"></div>污染區 ☠️ 每秒扣5HP，遠離為妙</div>
+      <div class="terrain-row"><div class="t-dot" style="background:#3a2e08"></div>沙灘 🏖️ 移動較慢，氧氣快速下降</div>
+    </div>
+    <div class="howto-section">
+      <div class="howto-h">📋 主線任務</div>
+      <div class="howto-row"><span class="howto-icon">1️⃣</span>探索青魚海域（移動超過200格）</div>
+      <div class="howto-row"><span class="howto-icon">2️⃣</span>找到並挑戰校長青魚</div>
+      <div class="howto-row"><span class="howto-icon">3️⃣</span>拜訪海鮮市場購物</div>
+      <div class="howto-row"><span class="howto-icon">4️⃣</span>收集3顆深海珍珠</div>
+      <div class="howto-row"><span class="howto-icon">🏆</span>完成全部任務，解鎖深海霸主稱號！</div>
+    </div>
+    <button class="back-btn" onclick="showScreen('title')">← 返回主選單</button>
+  </div>
+</div>
+
+<!-- ══ SETTINGS ══ -->
+<div class="screen hidden" id="screen-settings">
+  <div class="settings-inner">
+    <div class="settings-title">⚙️ 遊戲設定</div>
+    <div class="setting-group">
+      <div class="setting-group-title">🎨 畫質設定</div>
+      <div class="setting-row">
+        <div class="setting-label">畫質模式<small>影響幀率與細節</small></div>
+        <div class="seg-ctrl">
+          <button class="seg-btn" onclick="setSeg(this,'quality','low')" data-group="quality" data-val="low">低</button>
+          <button class="seg-btn active" onclick="setSeg(this,'quality','mid')" data-group="quality" data-val="mid">中</button>
+          <button class="seg-btn" onclick="setSeg(this,'quality','high')" data-group="quality" data-val="high">高</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">粒子特效<small>技能爆炸效果</small></div>
+        <div class="toggle on" id="tog-particles" onclick="toggleSetting(this,'particles')"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">地圖動畫<small>水波、氣泡動畫</small></div>
+        <div class="toggle on" id="tog-mapfx" onclick="toggleSetting(this,'mapfx')"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">顯示FPS<small>右上角幀率顯示</small></div>
+        <div class="toggle" id="tog-fps" onclick="toggleSetting(this,'fps')"></div>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-group-title">🔊 音效設定</div>
+      <div class="setting-row">
+        <div class="setting-label">音效開關<small>互動與戰鬥音效</small></div>
+        <div class="toggle on" id="tog-sfx" onclick="toggleSetting(this,'sfx')"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">音量大小</div>
+        <div class="slider-wrap">
+          <input type="range" min="0" max="100" value="70" id="sl-volume" oninput="document.getElementById('v-vol').textContent=this.value+'%'">
+          <span class="slider-val" id="v-vol">70%</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">震動回饋<small>操作觸覺震動</small></div>
+        <div class="toggle on" id="tog-vibrate" onclick="toggleSetting(this,'vibrate')"></div>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-group-title">🎮 操控設定</div>
+      <div class="setting-row">
+        <div class="setting-label">搖桿靈敏度</div>
+        <div class="slider-wrap">
+          <input type="range" min="1" max="5" value="3" id="sl-joysens" step="1" oninput="document.getElementById('v-sens').textContent=['慢','中慢','普通','中快','快'][this.value-1];gCfg.joySens=this.value/3">
+          <span class="slider-val" id="v-sens">普通</span>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">搖桿大小</div>
+        <div class="seg-ctrl">
+          <button class="seg-btn" onclick="setSeg(this,'joysize','small')" data-group="joysize" data-val="small">小</button>
+          <button class="seg-btn active" onclick="setSeg(this,'joysize','mid')" data-group="joysize" data-val="mid">中</button>
+          <button class="seg-btn" onclick="setSeg(this,'joysize','large')" data-group="joysize" data-val="large">大</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">顯示任務列表<small>右上角任務欄</small></div>
+        <div class="toggle on" id="tog-quest" onclick="toggleSetting(this,'questui')"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">攻擊按鈕位置</div>
+        <div class="seg-ctrl">
+          <button class="seg-btn active" onclick="setSeg(this,'btnside','right')" data-group="btnside" data-val="right">右</button>
+          <button class="seg-btn" onclick="setSeg(this,'btnside','left')" data-group="btnside" data-val="left">左</button>
+        </div>
+      </div>
+    </div>
+    <div class="setting-group">
+      <div class="setting-group-title">🌐 語言 / 顯示</div>
+      <div class="setting-row">
+        <div class="setting-label">語言</div>
+        <div class="seg-ctrl">
+          <button class="seg-btn active" onclick="setSeg(this,'lang','tw')" data-group="lang" data-val="tw">繁中</button>
+          <button class="seg-btn" onclick="setSeg(this,'lang','en')" data-group="lang" data-val="en">EN</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">HUD透明度</div>
+        <div class="slider-wrap">
+          <input type="range" min="40" max="100" value="88" id="sl-hud" oninput="document.getElementById('v-hud').textContent=this.value+'%'">
+          <span class="slider-val" id="v-hud">88%</span>
+        </div>
+      </div>
+    </div>
+    <button class="back-btn" onclick="showScreen('title')">← 返回主選單</button>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div class="screen hidden" id="screen-game">
+  <canvas id="game-canvas"></canvas>
+  <div id="hud">
+    <div id="stat-panel">
+      <div id="fish-label">🐟 普通青魚</div>
+      <div class="bar-row">❤️<div class="bar-bg"><div class="bar-fill" id="b-hp" style="width:100%;background:#ff4466"></div></div><span class="bar-val" id="v-hp">80</span></div>
+      <div class="bar-row">💧<div class="bar-bg"><div class="bar-fill" id="b-ox" style="width:100%;background:#40e0d0"></div></div><span class="bar-val" id="v-ox">100</span></div>
+      <div class="bar-row">✨<div class="bar-bg"><div class="bar-fill" id="b-fr" style="width:100%;background:#aaff44"></div></div><span class="bar-val" id="v-fr">100</span></div>
+      <div id="coin-lv">💰 <span id="v-coins">50</span>幣 &nbsp; Lv.<span id="v-lv">1</span> &nbsp; <span id="v-fps" style="color:#ff8844;display:none"></span></div>
+    </div>
+    <div id="minimap-wrap">
+      <canvas id="minimap" width="80" height="80"></canvas>
+    </div>
+    <div id="quest-panel">
+      <div class="qp-title">📜 任務</div>
+      <div class="qi" id="qi0">● 探索海域</div>
+      <div class="qi" id="qi1">● 挑戰校長</div>
+      <div class="qi" id="qi2">● 拜訪市場</div>
+      <div class="qi" id="qi3">● 珍珠 0/3</div>
+    </div>
+    <button id="pause-btn" onclick="togglePause()">⏸ 暫停</button>
+    <div id="notif-box"></div>
+    <div id="dialog-box">
+      <div id="dlg-name"></div>
+      <div id="dlg-text"></div>
+      <div id="dlg-opts"></div>
+    </div>
+    <div id="skill-flash">
+      <span id="sf-emoji">💥</span>
+      <div id="sf-name">技能名稱</div>
+    </div>
+    <div id="joystick-area">
+      <div id="joystick-base"></div>
+      <div id="joystick-knob"></div>
+    </div>
+    <div id="action-btns">
+      <button class="act-btn act-skill" id="btn-skill" onclick="useSkill()">⚡</button>
+      <button class="act-btn act-interact" id="btn-interact" onclick="tryInteract()">💬</button>
+      <button class="act-btn act-map" onclick="toggleQuestPanel()">🗺️</button>
+    </div>
+    <div id="pause-overlay">
+      <div class="pause-title">⏸ 暫停</div>
+      <button class="pause-btn" onclick="togglePause()">▶ 繼續遊戲</button>
+      <button class="pause-btn" onclick="showScreen('settings')">⚙️ 設定</button>
+      <button class="pause-btn danger" onclick="showScreen('title');stopGame()">🏠 回主選單</button>
+    </div>
+    <div id="end-overlay">
+      <div id="end-emoji">🏆</div>
+      <div id="end-title">深海霸主！</div>
+      <div id="end-sub">你完成了所有任務！</div>
+      <div class="end-stat" id="end-stats"></div>
+      <br>
+      <button class="pause-btn" onclick="startGame()">🔄 再玩一次</button>
+      <button class="pause-btn" onclick="showScreen('title');stopGame()">🏠 主選單</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ CONFIG ══
+const gCfg = {
+  quality:'mid', particles:true, mapfx:true, fps:false,
+  sfx:true, volume:0.7, vibrate:true,
+  joySens:1, joySize:'mid', questui:true, btnside:'right',
+  lang:'tw'
+};
+
+// ══ SCREEN MANAGER ══
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  document.getElementById('screen-'+id).classList.remove('hidden');
+}
+function setSeg(btn,group,val){
+  document.querySelectorAll(`[data-group="${group}"]`).forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(group==='quality') gCfg.quality=val;
+  if(group==='joysize'){gCfg.joySize=val; applyJoySize();}
+  if(group==='lang') gCfg.lang=val;
+}
+function toggleSetting(el,key){
+  el.classList.toggle('on');
+  gCfg[key]=el.classList.contains('on');
+  if(key==='fps') document.getElementById('v-fps').style.display=gCfg.fps?'':'none';
+  if(key==='questui') document.getElementById('quest-panel').classList.toggle('hide',!gCfg.questui);
+}
+function applyJoySize(){
+  const sz={small:80,mid:110,large:140}[gCfg.joySize]||110;
+  document.getElementById('joystick-base').style.width=sz+'px';
+  document.getElementById('joystick-base').style.height=sz+'px';
+}
+
+// ══ WORLD ══
+const TW=28,TH=28,COLS=55,ROWS=42;
+const T={WATER:0,CORAL:1,GRASS:2,DEEP:3,WHIRL:4,POLLUTE:5,SAND:6,WALL:7,FLOOR:8,DOOR:9};
+const TC={0:'#081828',1:'#3a0f20',2:'#0f2a0f',3:'#030810',4:'#140530',5:'#1e0e00',6:'#2e2008',7:'#0a1525',8:'#0d1e30',9:'#102a1e'};
+const TDE={0:'💧',1:'🪸',2:'🌿',3:'🌊',4:'🌀',5:'☠️',6:'🏖️',9:'🚪'};
+let world=[], decoCache=[];
+
+function genWorld(){
+  world=[];decoCache=[];
+  for(let r=0;r<ROWS;r++){
+    world[r]=[];decoCache[r]=[];
+    for(let c=0;c<COLS;c++){
+      const n=Math.random();
+      let t=T.WATER;
+      if(n<0.04) t=T.CORAL;
+      else if(n<0.09) t=T.GRASS;
+      else if(n<0.12) t=T.DEEP;
+      else if(n<0.14) t=T.WHIRL;
+      else if(n<0.16) t=T.POLLUTE;
+      else if(n<0.20) t=T.SAND;
+      world[r][c]=t;
+      decoCache[r][c]=(Math.random()<0.25)?TDE[t]||'':'';
+    }
+  }
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    if(r===0||r===ROWS-1||c===0||c===COLS-1) world[r][c]=T.WALL;
+  }
+  placeBuilding(4,4,7,8);
+  placeBuilding(4,20,6,6);
+  placeBuilding(8,35,5,7);
+  placeBuilding(22,46,6,6);
+  placeBuilding(28,10,6,8);
+}
+
+function placeBuilding(r,c,h,w){
+  for(let dr=0;dr<h;dr++) for(let dc=0;dc<w;dc++){
+    if(r+dr<ROWS&&c+dc<COLS){world[r+dr][c+dc]=T.WALL;decoCache[r+dr][c+dc]='';}
+  }
+  const mid=Math.floor(w/2);
+  if(r+h<ROWS&&c+mid<COLS){world[r+h-1][c+mid]=T.DOOR;decoCache[r+h-1][c+mid]='🚪';}
+  for(let dr=1;dr<h-1;dr++) for(let dc=1;dc<w-1;dc++){
+    if(r+dr<ROWS&&c+dc<COLS){world[r+dr][c+dc]=T.FLOOR;decoCache[r+dr][c+dc]='';}
+  }
+}
+
+function getTile(wx,wy){
+  const c=Math.floor(wx/TW),r=Math.floor(wy/TH);
+  if(r<0||r>=ROWS||c<0||c>=COLS) return T.WALL;
+  return world[r][c];
+}
+function blocked(wx,wy){return getTile(wx,wy)===T.WALL;}
+function canMove(nx,ny){
+  const m=10;
+  return !blocked(nx-m,ny-m)&&!blocked(nx+m,ny-m)&&!blocked(nx-m,ny+m)&&!blocked(nx+m,ny+m);
+}
+
+// ══ NPCS ══
+let npcs=[];
+function buildNPCs(){
+  npcs=[
+    {id:'principal',wx:6*TW,wy:5*TH,emoji:'🎓',name:'校長青魚',
+     dialogs:[
+       {t:'哼！又一條普通青魚！本校長管轄全校，你給我小心點！',o:[{l:'挑戰！',a:'fight_p'},{l:'路過',a:'leave'}]},
+       {t:'你膽量不錯！但還差得遠！去蒐集3顆深海珍珠再來見我！',o:[{l:'好的！',a:'leave'},{l:'撤退',a:'leave'}]}
+     ],di:0,metPrincipal:false},
+    {id:'vendor',wx:22*TW,wy:5*TH,emoji:'🐡',name:'市場老闆',
+     dialogs:[{t:'歡迎！🧊冰塊補新鮮(20幣) 🧂海鹽補氧氣(15幣) 🪣水桶補HP(30幣)',o:[{l:'🧊冰塊(20幣)',a:'buy_ice'},{l:'🧂海鹽(15幣)',a:'buy_salt'},{l:'🪣水桶(30幣)',a:'buy_bucket'},{l:'離開',a:'leave'}]}],di:0},
+    {id:'scholar',wx:38*TW,wy:10*TH,emoji:'🤓',name:'學霸青魚',
+     dialogs:[{t:'水草區每秒回血+5！深海區氧氣消耗快！污染區每秒扣5HP！記住這個「微積魚分定理」！',o:[{l:'謝謝！(+30XP)',a:'learn'},{l:'沒興趣',a:'leave'}]}],di:0},
+    {id:'rager',wx:30*TW,wy:11*TH,emoji:'😡',name:'狂暴青魚',
+     dialogs:[{t:'GRRRR！你走開！低血量的我攻擊力翻倍！你敢來挑戰嗎！',o:[{l:'決鬥！',a:'fight_r'},{l:'我走',a:'leave'}]}],di:0},
+    {id:'trash',wx:24*TW,wy:30*TH,emoji:'🗑️',name:'垃圾青魚',
+     dialogs:[{t:'嘿嘿～我能幫你把周圍變毒區！只要50幣！',o:[{l:'僱用(50幣)',a:'buy_pol'},{l:'你很臭',a:'insult'},{l:'離開',a:'leave'}]}],di:0},
+    {id:'p1',wx:3*TW,wy:36*TH,emoji:'💎',name:'深海珍珠',dialogs:[{t:'一顆閃亮的深海珍珠！',o:[{l:'拾取！',a:'pearl'},{l:'先放著',a:'leave'}]}],di:0,collected:false},
+    {id:'p2',wx:50*TW,wy:8*TH,emoji:'💎',name:'深海珍珠',dialogs:[{t:'深海珍珠在此等你！',o:[{l:'拾取！',a:'pearl'},{l:'先放著',a:'leave'}]}],di:0,collected:false},
+    {id:'p3',wx:26*TW,wy:38*TH,emoji:'💎',name:'深海珍珠',dialogs:[{t:'最後一顆！快拾取！',o:[{l:'拾取！',a:'pearl'},{l:'先放著',a:'leave'}]}],di:0,collected:false},
+  ];
+}
+
+// ══ PLAYER ══
+// FIX: pl 宣告為普通物件，speed 在 update 時直接計算，避免 getter 時機錯誤
+let pl={};
+const PLAYER_BASE_SPEED = 3;
+function getPlayerSpeed(){ return PLAYER_BASE_SPEED * (gCfg.joySens || 1); }
+
+function resetPlayer(){
+  pl={wx:14*TW,wy:14*TH,hp:80,maxHp:80,oxygen:100,fresh:100,
+      coins:50,level:1,xp:0,xpNext:100,
+      pearls:0,skillCD:0,steps:0,
+      q:{explored:false,boss:false,market:false,pearls:0},
+      invincible:0};
+}
+
+// ══ CANVAS / CAM ══
+let cv,ctx,mm,mctx,W,H,cam={x:0,y:0};
+let running=false,paused=false,lastTime=0,fpsCount=0,fpsTimer=0,fpsVal=0;
+let particles=[];
+let notifTimer=0;
+let animTick=0;
+let dialogOpen=false,currentNPC=null;
+
+function initCanvas(){
+  cv=document.getElementById('game-canvas');
+  mm=document.getElementById('minimap');
+  ctx=cv.getContext('2d');
+  mctx=mm.getContext('2d');
+  W=window.innerWidth; H=window.innerHeight;
+  cv.width=W; cv.height=H;
+  cv.style.width=W+'px'; cv.style.height=H+'px';
+}
+
+function updateCam(){
+  const tx=pl.wx-W/2, ty=pl.wy-H/2;
+  const maxX=COLS*TW-W, maxY=ROWS*TH-H;
+  cam.x=Math.max(0,Math.min(maxX,tx));
+  cam.y=Math.max(0,Math.min(maxY,ty));
+}
+
+// ══ DRAW ══
+function draw(dt){
+  ctx.fillStyle='#060f1e';
+  ctx.fillRect(0,0,W,H);
+
+  const r0=Math.max(0,Math.floor(cam.y/TH)-1);
+  const r1=Math.min(ROWS-1,Math.ceil((cam.y+H)/TH)+1);
+  const c0=Math.max(0,Math.floor(cam.x/TW)-1);
+  const c1=Math.min(COLS-1,Math.ceil((cam.x+W)/TW)+1);
+
+  for(let r=r0;r<=r1;r++){
+    for(let c=c0;c<=c1;c++){
+      const t=world[r][c];
+      const sx=c*TW-cam.x, sy=r*TH-cam.y;
+      ctx.fillStyle=TC[t]||'#081828';
+      ctx.fillRect(sx,sy,TW,TH);
+      ctx.strokeStyle='rgba(64,224,208,0.04)';
+      ctx.strokeRect(sx,sy,TW,TH);
+      if(gCfg.mapfx && decoCache[r] && decoCache[r][c]){
+        ctx.font=`${Math.floor(TW*0.5)}px serif`;
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.globalAlpha=0.35;
+        ctx.fillText(decoCache[r][c],sx+TW/2,sy+TH/2);
+        ctx.globalAlpha=1;
+      }
+    }
+  }
+
+  if(gCfg.mapfx){
+    ctx.save();
+    ctx.globalAlpha=0.03+0.02*Math.sin(animTick*0.04);
+    ctx.fillStyle='#40e0d0';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  ctx.font=`${Math.floor(TW*0.8)}px serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(const n of npcs){
+    if(n.collected) continue;
+    const sx=n.wx-cam.x, sy=n.wy-cam.y;
+    if(sx<-TW||sx>W+TW||sy<-TH||sy>H+TH) continue;
+    const bob=Math.sin(animTick*0.05+n.wx)*3;
+    ctx.fillText(n.emoji,sx,sy+bob);
+    ctx.font='9px sans-serif';
+    ctx.fillStyle='rgba(150,220,230,0.7)';
+    ctx.fillText(n.name,sx,sy+TW*0.7+bob);
+    ctx.font=`${Math.floor(TW*0.8)}px serif`;
+  }
+
+  const px=pl.wx-cam.x, py=pl.wy-cam.y;
+  ctx.fillStyle='rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(px,py+12,12,5,0,0,Math.PI*2);
+  ctx.fill();
+  if(pl.invincible>0){
+    ctx.save();
+    ctx.shadowColor='#40e0d0';
+    ctx.shadowBlur=20;
+  }
+  ctx.font=`${Math.floor(TW*1.0)}px serif`;
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  const playerBob=Math.sin(animTick*0.08)*2;
+  ctx.fillText('🐟',px,py+playerBob);
+  if(pl.invincible>0) ctx.restore();
+
+  if(gCfg.particles){
+    for(let i=particles.length-1;i>=0;i--){
+      const p=particles[i];
+      ctx.save();
+      ctx.globalAlpha=p.life;
+      ctx.font=`${Math.floor(p.size)}px serif`;
+      ctx.fillText(p.emoji,p.x-cam.x,p.y-cam.y);
+      ctx.restore();
+      p.x+=p.vx; p.y+=p.vy; p.vy-=0.1; p.life-=0.025;
+      if(p.life<=0) particles.splice(i,1);
+    }
+  }
+
+  drawMinimap();
+}
+
+function drawMinimap(){
+  const sw=80/COLS, sh=80/ROWS;
+  mctx.fillStyle='#060f1e';
+  mctx.fillRect(0,0,80,80);
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    mctx.fillStyle=TC[world[r][c]]||'#060f1e';
+    mctx.fillRect(c*sw,r*sh,sw+0.5,sh+0.5);
+  }
+  for(const n of npcs){
+    if(n.collected) continue;
+    mctx.fillStyle=n.id.startsWith('p')&&n.id!=='principal'?'#ffdd44':'#ff8844';
+    mctx.fillRect(n.wx/TW*sw-1,n.wy/TH*sh-1,3,3);
+  }
+  mctx.fillStyle='#40e0d0';
+  const mpx=pl.wx/TW*sw, mpy=pl.wy/TH*sh;
+  mctx.beginPath();
+  mctx.arc(mpx,mpy,3,0,Math.PI*2);
+  mctx.fill();
+  mctx.strokeStyle='rgba(64,224,208,0.4)';
+  mctx.lineWidth=0.5;
+  mctx.strokeRect(cam.x/TW*sw,cam.y/TH*sh,(W/TW)*sw,(H/TH)*sh);
+}
+
+// ══ UPDATE ══
+function update(dt){
+  if(paused||dialogOpen) return;
+  animTick++;
+
+  // FIX: 直接讀取 joy.dx / joy.dy，不再透過有問題的 getter
+  const spd = getPlayerSpeed();
+  let dx = joy.dx;
+  let dy = joy.dy;
+  if(keys['ArrowLeft']||keys['a']||keys['A']) dx=-1;
+  if(keys['ArrowRight']||keys['d']||keys['D']) dx=1;
+  if(keys['ArrowUp']||keys['w']||keys['W']) dy=-1;
+  if(keys['ArrowDown']||keys['s']||keys['S']) dy=1;
+
+  if(dx!==0||dy!==0){
+    const len=Math.sqrt(dx*dx+dy*dy)||1;
+    const nx=pl.wx+(dx/len)*spd, ny=pl.wy+(dy/len)*spd;
+    if(canMove(nx,pl.wy)) pl.wx=nx;
+    if(canMove(pl.wx,ny)) pl.wy=ny;
+    pl.steps++;
+    if(pl.steps>200&&!pl.q.explored){ pl.q.explored=true; updateQuestUI(); showNotif('✅ 任務完成：探索海域！'); }
+  }
+
+  updateCam();
+
+  if(animTick%60===0){
+    const t=getTile(pl.wx,pl.wy);
+    if(t===T.GRASS){ pl.hp=Math.min(pl.maxHp,pl.hp+5); if(Math.random()<0.1) spawnParticles(pl.wx,pl.wy,'💚',3); }
+    if(t===T.POLLUTE){ pl.hp-=5; spawnParticles(pl.wx,pl.wy,'☠️',2); }
+    if(t===T.DEEP){ pl.oxygen=Math.max(0,pl.oxygen-8); }
+    if(t===T.SAND){ pl.oxygen=Math.max(0,pl.oxygen-3); }
+    if(t!==T.SAND&&t!==T.DEEP) pl.oxygen=Math.min(100,pl.oxygen+2);
+    pl.fresh=Math.max(0,pl.fresh-1);
+    if(pl.fresh<20&&Math.random()<0.3) spawnParticles(pl.wx,pl.wy,'🤢',2);
+    if(pl.oxygen<=0) pl.hp-=8;
+    if(pl.hp<=0){ pl.hp=0; gameOver(); }
+  }
+
+  if(getTile(pl.wx,pl.wy)===T.WHIRL&&animTick%90===0){
+    const dirs=[[TW,0],[-TW,0],[0,TH],[0,-TH]];
+    const d=dirs[Math.floor(Math.random()*4)];
+    if(canMove(pl.wx+d[0],pl.wy+d[1])){ pl.wx+=d[0]; pl.wy+=d[1]; showNotif('🌀 漩渦！被旋轉了！'); }
+  }
+
+  if(pl.skillCD>0) pl.skillCD-=dt;
+  document.getElementById('btn-skill').style.opacity=pl.skillCD>0?'0.4':'1';
+  if(pl.invincible>0) pl.invincible-=dt;
+
+  if(notifTimer>0){
+    notifTimer-=dt;
+    if(notifTimer<=0){ document.getElementById('notif-box').classList.remove('show'); }
+  }
+
+  updateHUD();
+  checkProximity();
+}
+
+function checkProximity(){
+  const range=TW*2.5;
+  let nearest=null,nearDist=999999;
+  for(const n of npcs){
+    if(n.collected) continue;
+    const dx=n.wx-pl.wx, dy=n.wy-pl.wy;
+    const d=Math.sqrt(dx*dx+dy*dy);
+    if(d<range&&d<nearDist){ nearest=n; nearDist=d; }
+  }
+  document.getElementById('btn-interact').style.opacity=nearest?'1':'0.4';
+  window._nearestNPC=nearest;
+}
+
+function updateHUD(){
+  document.getElementById('b-hp').style.width=(pl.hp/pl.maxHp*100)+'%';
+  document.getElementById('b-ox').style.width=pl.oxygen+'%';
+  document.getElementById('b-fr').style.width=pl.fresh+'%';
+  document.getElementById('v-hp').textContent=Math.max(0,Math.floor(pl.hp));
+  document.getElementById('v-ox').textContent=Math.floor(pl.oxygen);
+  document.getElementById('v-fr').textContent=Math.floor(pl.fresh);
+  document.getElementById('v-coins').textContent=pl.coins;
+  document.getElementById('v-lv').textContent=pl.level;
+}
+
+function updateQuestUI(){
+  const q=pl.q;
+  document.getElementById('qi0').className='qi'+(q.explored?' done':'');
+  document.getElementById('qi0').textContent=(q.explored?'✓':'●')+' 探索海域';
+  document.getElementById('qi1').className='qi'+(q.boss?' done':'');
+  document.getElementById('qi1').textContent=(q.boss?'✓':'●')+' 挑戰校長';
+  document.getElementById('qi2').className='qi'+(q.market?' done':'');
+  document.getElementById('qi2').textContent=(q.market?'✓':'●')+' 拜訪市場';
+  document.getElementById('qi3').className='qi'+(q.pearls>=3?' done':'');
+  document.getElementById('qi3').textContent=(q.pearls>=3?'✓':'●')+` 珍珠 ${q.pearls}/3`;
+  checkWin();
+}
+
+function checkWin(){
+  const q=pl.q;
+  if(q.explored&&q.boss&&q.market&&q.pearls>=3){
+    setTimeout(()=>{
+      document.getElementById('end-emoji').textContent='🏆';
+      document.getElementById('end-title').textContent='深海霸主！';
+      document.getElementById('end-sub').textContent='你完成了所有任務，稱霸青魚海域！';
+      document.getElementById('end-stats').textContent=`💰 ${pl.coins}幣 · Lv.${pl.level} · 步數 ${pl.steps}`;
+      document.getElementById('end-overlay').classList.add('show');
+      paused=true;
+    },800);
+  }
+}
+
+function gameOver(){
+  paused=true;
+  document.getElementById('end-emoji').textContent='💀';
+  document.getElementById('end-title').textContent='青魚翻肚了！';
+  document.getElementById('end-sub').textContent='HP 歸零，下次要記得買水桶補血！';
+  document.getElementById('end-stats').textContent=`💰 ${pl.coins}幣 · 步數 ${pl.steps}`;
+  document.getElementById('end-overlay').classList.add('show');
+}
+
+function tryInteract(){
+  const n=window._nearestNPC;
+  if(!n||dialogOpen) return;
+  vibrate();
+  openDialog(n);
+}
+
+function openDialog(npc){
+  dialogOpen=true; currentNPC=npc;
+  const dlg=npc.dialogs[Math.min(npc.di,npc.dialogs.length-1)];
+  document.getElementById('dlg-name').textContent=npc.emoji+' '+npc.name;
+  document.getElementById('dlg-text').textContent=dlg.t;
+  const opts=document.getElementById('dlg-opts');
+  opts.innerHTML='';
+  dlg.o.forEach(o=>{
+    const b=document.createElement('div');
+    b.className='dopt'; b.textContent=o.l;
+    b.onclick=()=>doAction(o.a,npc);
+    opts.appendChild(b);
+  });
+  document.getElementById('dialog-box').style.display='block';
+}
+
+function closeDialog(){
+  dialogOpen=false; currentNPC=null;
+  document.getElementById('dialog-box').style.display='none';
+}
+
+function doAction(a,npc){
+  if(a==='leave'){closeDialog();return;}
+  if(a==='fight_p'){
+    closeDialog();
+    pl.hp=Math.max(1,pl.hp-30);
+    pl.coins+=80; gainXP(120);
+    pl.q.boss=true; updateQuestUI();
+    spawnParticles(npc.wx,npc.wy,'💥',10);
+    showNotif('⚔️ 挑戰校長！扣30HP 獲得80幣+120XP！');
+    npc.di=1;
+  } else if(a==='fight_r'){
+    closeDialog();
+    pl.hp=Math.max(1,pl.hp-20);
+    pl.coins+=35; gainXP(60);
+    spawnParticles(npc.wx,npc.wy,'💢',8);
+    showNotif('💢 狂暴戰鬥！扣20HP 獲得35幣+60XP！');
+  } else if(a==='buy_ice'){
+    if(pl.coins>=20){pl.coins-=20;pl.fresh=Math.min(100,pl.fresh+40);showNotif('🧊 新鮮度+40！');pl.q.market=true;updateQuestUI();}
+    else showNotif('💰 魚幣不足！'); closeDialog();
+  } else if(a==='buy_salt'){
+    if(pl.coins>=15){pl.coins-=15;pl.oxygen=Math.min(100,pl.oxygen+40);showNotif('🧂 氧氣+40！');pl.q.market=true;updateQuestUI();}
+    else showNotif('💰 魚幣不足！'); closeDialog();
+  } else if(a==='buy_bucket'){
+    if(pl.coins>=30){pl.coins-=30;pl.hp=Math.min(pl.maxHp,pl.hp+40);showNotif('🪣 HP+40！');pl.q.market=true;updateQuestUI();}
+    else showNotif('💰 魚幣不足！'); closeDialog();
+  } else if(a==='buy_pol'){
+    if(pl.coins>=50){pl.coins-=50;polluteSurround();showNotif('☠️ 周圍地圖污染化！');}
+    else showNotif('💰 魚幣不足！'); closeDialog();
+  } else if(a==='insult'){
+    pl.hp=Math.max(1,pl.hp-15);
+    showNotif('🤮 垃圾青魚發火！扣15HP！'); closeDialog();
+  } else if(a==='learn'){
+    gainXP(30); showNotif('📚 學到知識！+30XP'); closeDialog();
+  } else if(a==='pearl'){
+    npc.collected=true; pl.q.pearls++;
+    spawnParticles(npc.wx,npc.wy,'✨',12);
+    gainXP(50); pl.coins+=20;
+    showNotif(`💎 拾取珍珠！(${pl.q.pearls}/3) +50XP +20幣`);
+    updateQuestUI(); closeDialog();
+  }
+}
+
+function polluteSurround(){
+  const r=Math.floor(pl.wy/TH), c=Math.floor(pl.wx/TW);
+  for(let dr=-2;dr<=2;dr++) for(let dc=-2;dc<=2;dc++){
+    const rr=r+dr, cc=c+dc;
+    if(rr>=1&&rr<ROWS-1&&cc>=1&&cc<COLS-1&&world[rr][cc]!==T.WALL&&world[rr][cc]!==T.FLOOR){
+      world[rr][cc]=T.POLLUTE; decoCache[rr][cc]='☠️';
+    }
+  }
+}
+
+const SKILLS=[
+  {emoji:'🌊',name:'青魚水中游',fn:()=>{spawnParticles(pl.wx,pl.wy,'💦',15);pl.invincible=3000;pl.coins+=20;}},
+  {emoji:'💀',name:'終極臭魚',fn:()=>{spawnParticles(pl.wx,pl.wy,'🤢',12);spawnParticles(pl.wx,pl.wy,'🪰',8);}},
+  {emoji:'⚡',name:'魚怒衝撞',fn:()=>{spawnParticles(pl.wx,pl.wy,'💥',10);pl.coins+=15;}},
+];
+
+function useSkill(){
+  if(pl.skillCD>0){showNotif('⏳ 技能冷卻中！');return;}
+  vibrate();
+  const sk=SKILLS[Math.floor(Math.random()*SKILLS.length)];
+  sk.fn();
+  pl.skillCD=5000;
+  const sf=document.getElementById('skill-flash');
+  document.getElementById('sf-emoji').textContent=sk.emoji;
+  document.getElementById('sf-name').textContent=sk.name;
+  sf.classList.add('show');
+  setTimeout(()=>sf.classList.remove('show'),1500);
+}
+
+function spawnParticles(wx,wy,emoji,count){
+  if(!gCfg.particles) return;
+  for(let i=0;i<count;i++){
+    particles.push({
+      x:wx,y:wy,emoji,size:TW*(0.6+Math.random()*0.5),
+      vx:(Math.random()-0.5)*4,vy:-(1+Math.random()*3),life:1
+    });
+  }
+}
+
+function gainXP(amount){
+  pl.xp+=amount;
+  while(pl.xp>=pl.xpNext){
+    pl.xp-=pl.xpNext; pl.level++;
+    pl.xpNext=Math.floor(pl.xpNext*1.4);
+    pl.maxHp+=10; pl.hp=Math.min(pl.maxHp,pl.hp+10);
+    spawnParticles(pl.wx,pl.wy,'⭐',10);
+    showNotif(`🎉 升級！Lv.${pl.level}！MaxHP+10！`);
+  }
+}
+
+function showNotif(text,dur=2400){
+  const el=document.getElementById('notif-box');
+  el.textContent=text; el.classList.add('show');
+  notifTimer=dur;
+}
+
+function togglePause(){
+  paused=!paused;
+  document.getElementById('pause-btn').textContent=paused?'▶ 繼續':'⏸ 暫停';
+  document.getElementById('pause-overlay').classList.toggle('show',paused);
+}
+
+function toggleQuestPanel(){
+  const p=document.getElementById('quest-panel');
+  p.classList.toggle('hide');
+}
+
+// ══ JOYSTICK ══
+// FIX: 所有事件改用同一個物件管理，並在 startGame 前先清除舊監聽器
+const joy = { active:false, startX:0, startY:0, dx:0, dy:0, touchId:null };
+
+function joystickStart(e){
+  e.preventDefault();
+  e.stopPropagation();
+  // 只接受第一根手指
+  if(joy.active) return;
+  const t = e.touches ? e.touches[0] : e;
+  joy.active = true;
+  joy.touchId = e.touches ? t.identifier : null;
+  joy.startX = t.clientX;
+  joy.startY = t.clientY;
+  joy.dx = 0;
+  joy.dy = 0;
+}
+
+function joystickMove(e){
+  e.preventDefault();
+  if(!joy.active) return;
+
+  let t;
+  if(e.touches){
+    // FIX: 只追蹤開始時的那根手指
+    const touches = Array.from(e.touches);
+    t = joy.touchId !== null
+      ? touches.find(tt => tt.identifier === joy.touchId)
+      : touches[0];
+  } else {
+    t = e;
+  }
+  if(!t) return;
+
+  const rawDx = t.clientX - joy.startX;
+  const rawDy = t.clientY - joy.startY;
+  const maxR = 50;
+  const dist = Math.sqrt(rawDx*rawDx + rawDy*rawDy);
+  const clamped = Math.min(dist, maxR);
+  const angle = Math.atan2(rawDy, rawDx);
+
+  joy.dx = Math.cos(angle) * (clamped / maxR);
+  joy.dy = Math.sin(angle) * (clamped / maxR);
+
+  const ox = Math.cos(angle) * clamped;
+  const oy = Math.sin(angle) * clamped;
+  document.getElementById('joystick-knob').style.transform =
+    `translate(calc(-50% + ${ox}px), calc(-50% + ${oy}px))`;
+}
+
+function joystickEnd(e){
+  // FIX: 確認是同一根手指抬起才重置
+  if(e.touches && joy.touchId !== null){
+    const stillDown = Array.from(e.touches).some(t => t.identifier === joy.touchId);
+    if(stillDown) return;
+  }
+  joy.active = false;
+  joy.touchId = null;
+  joy.dx = 0;
+  joy.dy = 0;
+  document.getElementById('joystick-knob').style.transform = 'translate(-50%,-50%)';
+}
+
+// ══ KEYBOARD ══
+const keys={};
+document.addEventListener('keydown',e=>{
+  keys[e.key]=true;
+  if(e.key==='e'||e.key==='E') tryInteract();
+  if(e.key===' ') useSkill();
+  if(e.key==='Escape') togglePause();
+});
+document.addEventListener('keyup',e=>{ keys[e.key]=false; });
+
+function vibrate(ms=30){
+  if(gCfg.vibrate&&navigator.vibrate) navigator.vibrate(ms);
+}
+
+function calcFPS(now){
+  fpsCount++;
+  if(now-fpsTimer>=1000){
+    fpsVal=fpsCount; fpsCount=0; fpsTimer=now;
+    if(gCfg.fps) document.getElementById('v-fps').textContent=fpsVal+'fps';
+  }
+}
+
+// ══ GAME LOOP ══
+let rafId=null;
+function loop(now){
+  if(!running) return;
+  const dt=Math.min(now-lastTime,50);
+  lastTime=now;
+  calcFPS(now);
+  update(dt);
+  draw(dt);
+  rafId=requestAnimationFrame(loop);
+}
+
+// FIX: 用旗標確保事件只綁定一次，重新開始遊戲不重複綁定
+let joyEventsAttached = false;
+
+function attachJoystickEvents(){
+  if(joyEventsAttached) return;
+  joyEventsAttached = true;
+
+  const ja = document.getElementById('joystick-area');
+  // Touch events（手機）
+  ja.addEventListener('touchstart', joystickStart, {passive:false});
+  document.addEventListener('touchmove', joystickMove, {passive:false});
+  document.addEventListener('touchend', joystickEnd, {passive:false});
+  document.addEventListener('touchcancel', joystickEnd, {passive:false});
+  // Mouse events（桌面測試用）
+  ja.addEventListener('mousedown', joystickStart);
+  document.addEventListener('mousemove', joystickMove);
+  document.addEventListener('mouseup', joystickEnd);
+}
+
+function startGame(){
+  showScreen('game');
+  genWorld();
+  buildNPCs();
+  resetPlayer();
+  particles=[];
+  paused=false;
+  dialogOpen=false;
+  joy.active=false; joy.dx=0; joy.dy=0; joy.touchId=null;
+  document.getElementById('joystick-knob').style.transform='translate(-50%,-50%)';
+  document.getElementById('pause-overlay').classList.remove('show');
+  document.getElementById('end-overlay').classList.remove('show');
+  document.getElementById('dialog-box').style.display='none';
+  document.getElementById('notif-box').classList.remove('show');
+  updateQuestUI();
+  initCanvas();
+
+  attachJoystickEvents(); // FIX: 只綁定一次
+
+  running=true; lastTime=performance.now();
+  if(rafId) cancelAnimationFrame(rafId);
+  rafId=requestAnimationFrame(loop);
+
+  showNotif('🌊 青魚棋開放世界啟動！用搖桿或 WASD 移動！',3000);
+}
+
+function stopGame(){
+  running=false;
+  if(rafId) cancelAnimationFrame(rafId);
+}
+
+window.addEventListener('resize',()=>{
+  if(document.getElementById('screen-game').classList.contains('hidden')) return;
+  initCanvas();
+});
+
+showScreen('title');
+</script>
+</body>
+</html>
